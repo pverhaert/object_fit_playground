@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Object-Fit Visualizer</title>
+    <meta name="description" content="A tool to understand how images fit into their containers.">
+    <meta name="author" content="Patrick Verhaert">
+    <meta name="keywords" content="CSS, Object-Fit, Image, Visualizer">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Header / Context -->
+    <header class="main-header">
+        <h1>CSS Object-Fit & Position Visualizer</h1>
+        <p>A tool to understand how images fit into their containers.</p>
+    </header>
+
+    <!-- Main Visualization Stage -->
+    <main class="stage">
+
+        <!-- Scene 1: Landscape Image -->
+        <div class="scene landscape-scene">
+            <h2>Landscape Source</h2>
+            <div class="visualizer-wrapper">
+                <!-- Ghost Layer: Represents the full image behind the crop -->
+                <div class="ghost" aria-hidden="true">
+                    <img src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=600&q=80"
+                        alt="Ghost Landscape" style="opacity: 0;">
+                </div>
+                <!-- Focus Layer: The actual clipped container -->
+                <div class="focus">
+                    <img src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=600&q=80"
+                        alt="Landscape Nature">
+                </div>
+            </div>
+        </div>
+
+        <!-- Scene 2: Portrait Image -->
+        <div class="scene portrait-scene">
+            <h2>Portrait Source</h2>
+            <div class="visualizer-wrapper">
+                <!-- Ghost Layer -->
+                <div class="ghost" aria-hidden="true">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80"
+                        alt="Ghost Portrait" style="opacity: 0;">
+                </div>
+                <!-- Focus Layer -->
+                <div class="focus">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80"
+                        alt="Portrait Person">
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Draggable Control Panel -->
+    <aside class="control-panel" id="controlPanel">
+        <header class="panel-header" id="panelHeader">
+            <h3>Controls</h3>
+            <span class="drag-hint">:: Drag ::</span>
+        </header>
+
+        <form id="controls">
+            <!-- Object-Fit Controls -->
+            <fieldset>
+                <legend>Object Fit</legend>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="object-fit" value="fill" checked>
+                        fill (default)
+                    </label>
+                    <label>
+                        <input type="radio" name="object-fit" value="contain">
+                        contain
+                    </label>
+                    <label>
+                        <input type="radio" name="object-fit" value="cover">
+                        cover (most used)
+                    </label>
+                    <label>
+                        <input type="radio" name="object-fit" value="none">
+                        none
+                    </label>
+                </div>
+            </fieldset>
+
+            <!-- Object-Position Controls -->
+            <fieldset>
+                <legend>Object Position</legend>
+
+                <div class="slider-group">
+                    <label for="posX">Position X: <span id="valX">50%</span></label>
+                    <input type="range" id="posX" min="0" max="100" value="50">
+                </div>
+
+                <div class="slider-group">
+                    <label for="posY">Position Y: <span id="valY">50%</span></label>
+                    <input type="range" id="posY" min="0" max="100" value="50">
+                </div>
+            </fieldset>
+
+            <div class="actions">
+                <button type="button" id="btnReset" class="btn btn-secondary">Reset Defaults</button>
+            </div>
+
+            <div class="code-output" id="codeBlock">
+                <pre id="cssOutput">.img {
+    width: 300px;
+    height: 300px;
+}</pre>
+                <div id="copyMsg" class="copy-notification">Copied!</div>
+            </div>
+        </form>
+    </aside>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,375 @@
+/* 
+ * CSS Object-Fit Visualizer Styles
+ * Focused on clarity and pedagogical value.
+ */
+
+:root {
+    --bg-color: #1a1a1a;
+    --text-color: #f0f0f0;
+    --accent-color: #4a90e2;
+    --panel-bg: rgba(45, 45, 45, 0.9);
+    --border-color: #444;
+
+    /* Dynamic Variables updated by JS */
+    --fit-mode: fill;
+    --pos-x: 50%;
+    --pos-y: 50%;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    overflow: auto;
+    /* Prevent scrolling if panel is dragged off slightly, though we keep stage centered */
+}
+
+.main-header {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    margin-bottom: 2rem;
+}
+
+.stage {
+    display: flex;
+    justify-content: center;
+    gap: 5rem;
+    padding: 2rem;
+    flex-wrap: wrap;
+    height: calc(100vh - 100px);
+    align-items: flex-start;
+}
+
+/* Scene Wrapper */
+.scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* 
+ * The Visualizer Wrapper 
+ * This contains both the "Ghost" (background) and "Focus" (foreground) layers.
+ * It is sized to the desired viewing box (300x300), but creates a context for the absolute ghost.
+ */
+.visualizer-wrapper {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    /* We do NOT hide overflow here, because we want the ghost to potentially bleed out if we want to see full context,
+       BUT for this specific design, framing the ghost inside the same box might be cleaner, 
+       OR we let the ghost be the full size image behind it. 
+       
+       Let's try a strict layering approach first where they match size but opacity differs.
+    */
+    background: #000;
+    border: 1px dashed #555;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* 
+ * Layer 1: The Ghost (Context Layer)
+ * -----------------------------------
+ * The "Ghost" image sits behind our main focus box.
+ * 
+ * UPDATE: We now handle the sizing and positioning via JavaScript 
+ * to perfectly match the 'cover' and 'none' algorithms.
+ * 
+ * This container must match the parent box exactly so our (0,0) coordinate system
+ * aligns with the Focus box.
+ */
+.ghost {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    z-index: 0;
+    opacity: 0.9;
+    pointer-events: none;
+
+    /* We allow the ghost image to bleed out so we can see what's lost */
+    overflow: visible;
+    border: 1px dotted rgba(255, 255, 255, 0.2);
+}
+
+/* 
+ * The Ghost Image:
+ * Controlled entirely by JS for size/position.
+ * Transition mimics the focus image for smoothness.
+ */
+.ghost img {
+    position: absolute;
+    /* top, left, width, height will be set by JS */
+    display: block;
+    transform: translate(0, 0);
+    /* Ensure no default centering plays tricks */
+    transition: all 0.1s linear;
+    /* Smooth movement */
+}
+
+/* 
+ * Layer 2: The Focus Box (Active Layer)
+ * -------------------------------------
+ * This represents the actual HTML element on a production page.
+ * It has fixed dimensions (300x300) which forces the browser to make a decision
+ * on how to render the image inside.
+ */
+.focus {
+    position: relative;
+    width: 100%;
+    /* Inherits 300px from parent wrapper */
+    height: 100%;
+    z-index: 1;
+    /* Sits on top of the ghost */
+
+    /* Essential: Hides the parts of the image that spill out (unless we want to see them) */
+    overflow: hidden;
+
+    border: 2px solid var(--accent-color);
+    /* Highlight the "Box" boundary */
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/*
+ * The Focus Image:
+ * This is where the magic happens. We control its behavior via CSS Variables
+ * updated by JavaScript.
+ */
+.focus img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    /* Removes bottom spacing inherent to inline elements */
+
+    /* 
+     * object-fit: 
+     * - fill: Stretch to match box (distorts aspect ratio).
+     * - contain: Shrink to fit fully inside (maintains ratio, leaves empty space).
+     * - cover: Fill the box entirely (maintains ratio, crops edges).
+     * - none: Do not resize the image at all (show raw pixels).
+     */
+    object-fit: var(--fit-mode);
+
+    /* 
+     * object-position:
+     * Moves the image within the box (X% Y%).
+     * 50% 50% is Center/Center.
+     * 0% 0% is Top/Left.
+     */
+    object-position: var(--pos-x) var(--pos-y);
+
+    /* Smooth transition for better visual feedback when values change */
+    transition: object-fit 0.3s, object-position 0.1s;
+}
+
+/* 
+ * Floating Control Panel 
+ * ----------------------
+ * Positioned absolutely on the screen so the user can drag it out of the way
+ * if it blocks a specific part of the image.
+ */
+.control-panel {
+    position: absolute;
+    top: 120px;
+    right: 20px;
+    width: 250px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    user-select: none;
+}
+
+.panel-header {
+    background: #333;
+    padding: 0.75rem 1rem;
+    cursor: move;
+    /* Indicates draggable */
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.drag-hint {
+    font-size: 0.8rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#controls {
+    padding: 1rem;
+}
+
+fieldset {
+    border: none;
+    margin-bottom: 1.5rem;
+}
+
+/* Remove margin from last fieldset */
+fieldset:last-of-type {
+    margin-bottom: 0;
+}
+
+legend {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ccc;
+    margin-bottom: 0.5rem;
+    display: block;
+    width: 100%;
+    border-bottom: 1px solid #444;
+    padding-bottom: 0.25rem;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.slider-group {
+    margin-bottom: 1rem;
+}
+
+.slider-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+input[type="range"] {
+    width: 100%;
+    cursor: pointer;
+}
+
+/* Action Buttons */
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #444;
+}
+
+.btn {
+    flex: 1;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-secondary {
+    background: #444;
+    color: #ccc;
+}
+
+.btn-secondary:hover {
+    background: #555;
+    color: #fff;
+}
+
+.btn-primary {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #357abd;
+}
+
+@media (min-width: 768px) {
+    body {
+        overflow: hidden;
+    }
+
+    .stage {
+        gap: 10rem;
+    }
+}
+
+/* Code Output Block */
+.code-output {
+    margin-top: 1rem;
+    background: #222;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #555;
+    position: relative;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.code-output:hover {
+    border-color: var(--accent-color);
+}
+
+.code-output pre {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85rem;
+    color: #a5d6a7;
+    /* Soft green code color */
+    white-space: pre-wrap;
+    line-height: 1.4;
+    margin: 0;
+    pointer-events: none;
+    /* Let clicks pass through to container */
+}
+
+/* Copy Notification */
+.copy-notification {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(74, 144, 226, 0.9);
+    /* Accent color with opacity */
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.copy-notification.visible {
+    opacity: 1;
+}
