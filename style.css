@@ -183,7 +183,7 @@ body {
     position: absolute;
     top: 120px;
     right: 20px;
-    width: 250px;
+    width: 300px;
     background: var(--panel-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
